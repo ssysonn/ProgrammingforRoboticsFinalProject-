@@ -1,0 +1,127 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/UnevenTerrain.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/road/protos/Road.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/adept/pioneer3/protos/Pioneer3at.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/trees/protos/Cypress.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/cabinet/protos/Cabinet.proto"
+
+WorldInfo {
+}
+Viewpoint {
+  orientation -0.0034008222333937223 0.999939261392349 0.010483698501029287 0.6283345143800774
+  position -16.09846500096075 -0.516207546816674 7.451584457385776
+}
+DEF _ Road {
+  translation 0 0 1
+  width 6
+  roadBorderWidth [
+    0.1
+  ]
+  rightBarrier TRUE
+  leftBarrier TRUE
+  bottom TRUE
+  wayPoints [
+    -15 0 1.5
+    -10 0 0.6
+    0 0 -1
+    10 0 0.6
+  ]
+  startingAngle [
+    0
+  ]
+  roadBoundingObject TRUE
+  rightBorderBoundingObject TRUE
+  leftBorderBoundingObject TRUE
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+DEF WATER Fluid {
+  translation 0 0 -1.15
+  children [
+    DEF WATER_BOX Shape {
+      appearance PBRAppearance {
+        baseColor 0.7254901960784313 0.8705882352941177 1
+        transparency 0.6
+        roughness 0.2
+        metalness 0
+        emissiveColor 0.374228 0.166751 0.0593881
+      }
+      geometry Box {
+        size 18 19 5
+      }
+    }
+  ]
+  boundingObject USE WATER_BOX
+  locked TRUE
+}
+UnevenTerrain {
+  translation 0 0 0.4
+  randomSeed 11
+  flatCenter TRUE
+}
+Pioneer3at {
+  hidden position_0_0 55.93722938148454
+  hidden position_0_1 56.26172234511256
+  hidden position_0_2 55.93712919541334
+  hidden position_0_3 56.26166995888148
+  hidden translation_5 -0.1331 0.197 0.11
+  hidden rotation_5 -0.6636365027233803 0.6636308207523937 0.3452256160840113 3.8064125510759967
+  hidden translation_6 -0.1331 -0.197 0.11
+  hidden rotation_6 -0.6251463055581535 0.6251414370466598 0.4673224586238379 4.015912312252742
+  hidden translation_7 0.1331 0.197 0.11
+  hidden rotation_7 -0.6636461794388849 0.6636404972412249 0.34518841078111384 3.8063460640266022
+  hidden translation_8 0.1331 -0.197 0.11
+  hidden rotation_8 -0.6251537623461538 0.6251488936896776 0.4673025081711211 4.015879563253646
+  translation -9.16654 -0.593585 1.48267
+  rotation -0.047188976752858616 0.8039808255555875 -0.5927799192043994 0.20223041636149006
+  name "Pioneer 3-AT(1)"
+  controller "floodguard_controller"
+  extensionSlot [
+    DistanceSensor {
+      translation 0.206949 0.00699667 0.109992
+      rotation -6.158309999829675e-06 -4.170189999884662e-06 0.9999999999723423 -1.5707953071795862
+    }
+    Camera {
+      translation 0.221294 1.82291e-06 0.0618868
+      rotation 2.6111799998540498e-08 -0.9999999999441056 -1.0572999999409029e-05 -0.13090530717958604
+      width 128
+    }
+    InertialUnit {
+      translation 0 0 0.08
+    }
+    GPS {
+      translation 0 0 0.08
+    }
+  ]
+}
+Cabinet {
+  hidden position_6_0 0.010006401026665983
+  hidden translation_7 -0.0019912405740752327 -9.962658991335971e-06 0
+  hidden rotation_7 0 0 1 0.01000640102666507
+  hidden position_10_0 -0.010005440584379587
+  hidden translation_11 -0.001692392037283702 8.46663461939734e-06 0
+  hidden rotation_11 0 0 -1 0.01000544058439682
+  hidden position_14_0 -0.010029037698193435
+  hidden translation_15 -0.010029037698193435 0 0
+  hidden position_22_0 -0.010029037698193435
+  hidden translation_23 -0.010029037698193435 0 0
+  hidden position_30_0 -0.010029037698193435
+  hidden translation_31 -0.010029037698193435 0 0
+  hidden position_38_0 -0.010060429706756819
+  hidden translation_39 -0.010060429706756819 0 0
+  translation 2.73 0.800001 0.6
+  rotation 0.577349935856137 0.577349935856137 0.5773509358560258 -2.094395307179586
+}
+Solid {
+  translation -0.93 -3.83 0.69
+  rotation 1 0 0 -1.5707953071795862
+  children [
+    Cypress {
+    }
+  ]
+}
