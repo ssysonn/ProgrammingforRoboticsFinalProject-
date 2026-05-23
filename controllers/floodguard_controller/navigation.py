@@ -38,3 +38,15 @@ class Navigation:
 
         # stronger pivot
         self.set_speeds(-MAX_SPEED * 0.8, MAX_SPEED * 0.8)
+
+    def turn_left_arc(self, speed=MAX_SPEED, bias=0.6):
+        """Perform a forward-left arc: both wheels forward, left slower than right."""
+        left_speed = speed * bias
+        right_speed = speed
+        self.set_speeds(left_speed, right_speed)
+
+    def turn_right_arc(self, speed=MAX_SPEED, bias=0.6):
+        """Perform a forward-right arc: both wheels forward, right slower than left."""
+        left_speed = speed
+        right_speed = speed * bias
+        self.set_speeds(left_speed, right_speed)

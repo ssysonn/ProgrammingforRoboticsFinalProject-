@@ -1,5 +1,5 @@
 from controller import Camera, DistanceSensor, InertialUnit, GPS
-from constants import TIME_STEP, WATER_BLUE_THRESHOLD
+from constants import TIME_STEP, WATER_BLUE_THRESHOLD, MIN_VALID_SONAR_DISTANCE, SONAR_SMOOTH_ALPHA
 
 class SensorManager:
     def __init__(self, robot):
@@ -23,37 +23,37 @@ class SensorManager:
             sensor.enable(TIME_STEP)
             self.sonars[sonar_name] = sensor
 
+        # Smoothed sonar state (to avoid railing/road noise)
+        self.front_smoothed = 1000.0
+        self.left_smoothed = 1000.0
+        self.right_smoothed = 1000.0
+
     def get_front_distance(self):
         values = [self.sonars["so2"].getValue(), self.sonars["so3"].getValue(),
                   self.sonars["so4"].getValue(), self.sonars["so5"].getValue()]
-        valid = [v for v in values if v > 0.01]
-        if valid:
-            return min(valid)
-        if any(v == 0.0 for v in values):
-            return 0.01
-        return 1000.0
+        valid = [v for v in values if v > MIN_VALID_SONAR_DISTANCE]
+        raw = min(valid) if valid else 1000.0
+        # exponential smoothing
+        self.front_smoothed = SONAR_SMOOTH_ALPHA * raw + (1.0 - SONAR_SMOOTH_ALPHA) * self.front_smoothed
+        return self.front_smoothed
 
     def get_left_distance(self):
         s0 = self.sonars["so0"].getValue()
         s1 = self.sonars["so1"].getValue()
         values = [s0, s1]
-        valid = [v for v in values if v > 0.01]
-        if valid:
-            return min(valid)
-        if any(v == 0.0 for v in values):
-            return 0.01
-        return 1000.0
+        valid = [v for v in values if v > MIN_VALID_SONAR_DISTANCE]
+        raw = min(valid) if valid else 1000.0
+        self.left_smoothed = SONAR_SMOOTH_ALPHA * raw + (1.0 - SONAR_SMOOTH_ALPHA) * self.left_smoothed
+        return self.left_smoothed
 
     def get_right_distance(self):
         s6 = self.sonars["so6"].getValue()
         s7 = self.sonars["so7"].getValue()
         values = [s6, s7]
-        valid = [v for v in values if v > 0.01]
-        if valid:
-            return min(valid)
-        if any(v == 0.0 for v in values):
-            return 0.01
-        return 1000.0
+        valid = [v for v in values if v > MIN_VALID_SONAR_DISTANCE]
+        raw = min(valid) if valid else 1000.0
+        self.right_smoothed = SONAR_SMOOTH_ALPHA * raw + (1.0 - SONAR_SMOOTH_ALPHA) * self.right_smoothed
+        return self.right_smoothed
 
     def get_position(self):
         return self.gps.getValues()
