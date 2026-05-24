@@ -93,6 +93,8 @@ last_turn_direction = None
 FAILSAFE_TRIGGER_TIME = 80.0
 
 failsafe_mode = False
+shoreline_printed = False
+flood_entry_printed = False
 
 
 # =========================================================
@@ -110,7 +112,8 @@ water_entry_point = None
 water_entry_height = None
 
 last_depth_print = 0.0
-
+max_depth = 0.0
+depth_print_count = 0
 
 # =========================================================
 # LOOP
@@ -153,13 +156,17 @@ while robot.step(TIME_STEP) != -1:
 
         water_tracking_state = "APPROACHING"
 
+    if not shoreline_printed:
+
         instant_print(
             "[TRACKER] Shoreline detected."
         )
 
+        shoreline_printed = True
+
     elif (
         water_tracking_state == "APPROACHING"
-        and dry_detection_frames > 5
+        and dry_detection_frames > 12
     ):
 
         water_tracking_state = "FULLY_SUBMERGED"
@@ -167,11 +174,16 @@ while robot.step(TIME_STEP) != -1:
         water_entry_point = (x, z)
 
         water_entry_height = y
+        lowest_y = y
+
+    if not flood_entry_printed:
 
         instant_print(
             f"[TRACKER] Flood entry confirmed "
             f"X:{x:.2f} Z:{z:.2f}"
         )
+
+        flood_entry_printed = True
 
     elif (
         water_tracking_state == "FULLY_SUBMERGED"
@@ -180,9 +192,6 @@ while robot.step(TIME_STEP) != -1:
 
         water_tracking_state = "DRY_LAND"
 
-        instant_print(
-            "[TRACKER] Flood region exited."
-        )
 
     # =====================================================
     # DEPTH ESTIMATION
@@ -190,35 +199,51 @@ while robot.step(TIME_STEP) != -1:
 
     if (
         water_tracking_state == "FULLY_SUBMERGED"
-        and water_entry_point is not None
+        and water_entry_height is not None
     ):
 
-        dx = x - water_entry_point[0]
+        # calculate vertical difference from entry point
+        DEPTH_SCALE = 3.5
 
+        current_depth = (
+            water_entry_height - y
+        ) * DEPTH_SCALE
+
+        # prevent negative depth values
+        if current_depth < 0:
+            current_depth = 0
+
+        # track deepest point reached
+        if 'max_depth' not in globals():
+            max_depth = current_depth
+
+        if current_depth > max_depth:
+            max_depth = current_depth
+
+        # smooth noisy readings
+        depth_estimate = round(current_depth, 2)
+
+        # distance travelled through flood
+        dx = x - water_entry_point[0]
         dz = z - water_entry_point[1]
 
         distance_travelled = math.sqrt(
             dx**2 + dz**2
         )
 
-        depth_estimate = abs(
-            y - water_entry_height
+    # print only 5 times
+    if (
+        t - last_depth_print > 5.0
+        and depth_print_count < 5
+    ):
+
+        instant_print(
+            f"Max Depth: {max_depth:.2f}m"
         )
 
-        depth_estimate = round(
-            depth_estimate,
-            2
-        )
+        last_depth_print = t
 
-        if t - last_depth_print > 2.0:
-
-            instant_print(
-                f"[DEPTH] "
-                f"Distance: {distance_travelled:.2f}m | "
-                f"Estimated Depth: {depth_estimate:.2f}m"
-            )
-
-            last_depth_print = t
+        depth_print_count += 1
 
     # =====================================================
     # FAILSAFE ACTIVATION
@@ -232,8 +257,7 @@ while robot.step(TIME_STEP) != -1:
         failsafe_mode = True
 
         instant_print(
-            "[FAILSAFE] Sensor override activated. "
-            "Driving straight."
+            "[SAFE] Driving straight. "
         )
 
     front = perception.get_front_clearance()
@@ -313,9 +337,7 @@ while robot.step(TIME_STEP) != -1:
             or right_contact
         ):
 
-            instant_print(
-                "[BUMP] physical contact detected"
-            )
+
 
             navigation.stop()
 
@@ -334,10 +356,7 @@ while robot.step(TIME_STEP) != -1:
 
                 turn_bias = 0.45
 
-                instant_print(
-                    f"[BUMP] CLOSE CONTACT "
-                    f"front={front:.1f}"
-                )
+
 
             else:
 
@@ -382,10 +401,7 @@ while robot.step(TIME_STEP) != -1:
                     perception.get_best_steering_direction()
                 )
 
-            instant_print(
-                f"[BUMP] turning "
-                f"{escape_direction}"
-            )
+
 
             # -------------------------------------------------
             # TURN
@@ -462,12 +478,7 @@ while robot.step(TIME_STEP) != -1:
             < SIDE_DETECTION_THRESHOLD
         ):
 
-            instant_print(
-                f"[OBSTACLE] detected "
-                f"front={front:.2f} "
-                f"left={left_clearance:.2f} "
-                f"right={right_clearance:.2f}"
-            )
+
 
             navigation.stop()
 
@@ -479,10 +490,7 @@ while robot.step(TIME_STEP) != -1:
 
                 escape_direction = "LEFT"
 
-            instant_print(
-                f"[OBSTACLE] chosen "
-                f"escape={escape_direction}"
-            )
+
 
             last_turn_direction = (
                 escape_direction
@@ -583,11 +591,7 @@ while robot.step(TIME_STEP) != -1:
 
         if turn_lock_frames < PIVOT_TURN_FRAMES:
 
-            instant_print(
-                f"[PIVOT] "
-                f"frame={turn_lock_frames} "
-                f"dir={escape_direction}"
-            )
+
 
             if escape_direction == "RIGHT":
 
@@ -634,9 +638,7 @@ while robot.step(TIME_STEP) != -1:
 
                 robot_mode = "PATROL_TO_GOAL"
 
-                instant_print(
-                    "[RECOVERY] path clear"
-                )
+
 
             turn_lock_frames = 0
 
@@ -747,9 +749,7 @@ while robot.step(TIME_STEP) != -1:
 
             wall_follow_frames = 0
 
-            instant_print(
-                "[WALL_FOLLOW] obstacle cleared"
-            )
+
 
         # -------------------------------------------------
         # STUCK TOO LONG
@@ -760,9 +760,7 @@ while robot.step(TIME_STEP) != -1:
             > MAX_WALL_FOLLOW_FRAMES
         ):
 
-            instant_print(
-                "[WALL_FOLLOW] switching direction"
-            )
+
 
             escape_direction = (
                 "LEFT"
